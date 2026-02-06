@@ -17,6 +17,7 @@ import { produce } from "immer";
 import { SEASONAL_SEEDS } from "features/game/types/seeds";
 import { isFullMoonBerry } from "./seedBought";
 import { updateBoostUsed } from "features/game/types/updateBoostUsed";
+import { validateTimestamp } from "../validateTimestamp";
 
 export type PlantFruitAction = {
   type: "fruit.planted";
@@ -238,16 +239,18 @@ export const getFruitPatchTime = (
 type Options = {
   state: Readonly<GameState>;
   action: PlantFruitAction;
-  createdAt?: number;
+  createdAt: number;
   harvestsLeft?: () => number;
 };
 
 export function plantFruit({
   state,
   action,
-  createdAt = Date.now(),
+  createdAt,
   harvestsLeft = getDefaultHarvestsLeft,
 }: Options): GameState {
+  // Security: Validate timestamp to prevent time manipulation exploits
+  validateTimestamp(createdAt);
   return produce(state, (stateCopy) => {
     const { fruitPatches, bumpkin } = stateCopy;
 

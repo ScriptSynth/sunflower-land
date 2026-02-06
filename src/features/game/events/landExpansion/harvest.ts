@@ -59,6 +59,7 @@ import {
 import { isBuffActive } from "features/game/types/buffs";
 import { prngChance } from "lib/prng";
 import { KNOWN_IDS } from "features/game/types";
+import { validateTimestamp } from "../validateTimestamp";
 export type LandExpansionHarvestAction = {
   type: "crop.harvested";
   index: string;
@@ -67,7 +68,7 @@ export type LandExpansionHarvestAction = {
 type Options = {
   state: GameState;
   action: LandExpansionHarvestAction;
-  createdAt?: number;
+  createdAt: number;
   farmId?: number;
 };
 
@@ -1017,9 +1018,12 @@ export function harvestCropFromPlot({
 export function harvest({
   state,
   action,
-  createdAt = Date.now(),
+  createdAt,
   farmId = 0,
 }: Options): GameState {
+  // Security: Validate timestamp to prevent time manipulation exploits
+  validateTimestamp(createdAt);
+
   return produce(state, (stateCopy) => {
     const { crops: plots } = stateCopy;
 

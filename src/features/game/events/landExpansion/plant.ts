@@ -1,5 +1,4 @@
 import Decimal from "decimal.js-light";
-
 import {
   CropName,
   CROPS,
@@ -34,7 +33,6 @@ import {
   Position,
 } from "features/game/expansion/placeable/lib/collisionDetection";
 import { getBudSpeedBoosts } from "features/game/lib/getBudSpeedBoosts";
-
 import { isWearableActive } from "features/game/lib/wearables";
 import { produce } from "immer";
 import {
@@ -59,6 +57,7 @@ import { isBuffActive } from "features/game/types/buffs";
 import { isAutumnCrop, isSummerCrop } from "./harvest";
 import { prngChance } from "lib/prng";
 import { KNOWN_IDS } from "features/game/types";
+import { validateTimestamp } from "../validateTimestamp";
 
 export type LandExpansionPlantAction = {
   type: "seed.planted";
@@ -70,7 +69,7 @@ export type LandExpansionPlantAction = {
 type Options = {
   state: Readonly<GameState>;
   action: LandExpansionPlantAction;
-  createdAt?: number;
+  createdAt: number;
   farmId: number;
 };
 
@@ -657,9 +656,11 @@ export function plantCropOnPlot({
 export function plant({
   state,
   action,
-  createdAt = Date.now(),
+  createdAt,
   farmId,
 }: Options): GameState {
+  // Security: Validate timestamp to prevent time manipulation exploits
+  validateTimestamp(createdAt);
   return produce(state, (stateCopy) => {
     const { crops: plots } = stateCopy;
 

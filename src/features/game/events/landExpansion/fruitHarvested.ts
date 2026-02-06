@@ -38,6 +38,7 @@ import { getFruitfulBlendBuff } from "./fertiliseFruitPatch";
 import { updateBoostUsed } from "features/game/types/updateBoostUsed";
 import { prngChance } from "lib/prng";
 import { KNOWN_IDS } from "features/game/types";
+import { validateTimestamp } from "../validateTimestamp";
 
 export type HarvestFruitAction = {
   type: "fruit.harvested";
@@ -47,7 +48,7 @@ export type HarvestFruitAction = {
 type Options = {
   state: Readonly<GameState>;
   action: HarvestFruitAction;
-  createdAt?: number;
+  createdAt: number;
   farmId: number;
 };
 
@@ -313,9 +314,11 @@ export function getFruitYield({
 export function harvestFruit({
   state,
   action,
-  createdAt = Date.now(),
+  createdAt,
   farmId,
 }: Options): GameState {
+  // Security: Validate timestamp to prevent time manipulation exploits
+  validateTimestamp(createdAt);
   return produce(state, (stateCopy) => {
     const { fruitPatches, bumpkin } = stateCopy;
 

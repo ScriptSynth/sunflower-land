@@ -10,6 +10,7 @@ import { isWearableActive } from "features/game/lib/wearables";
 import { produce } from "immer";
 import { isCollectibleBuilt } from "features/game/lib/collectibleBuilt";
 import { updateBoostUsed } from "features/game/types/updateBoostUsed";
+import { validateTimestamp } from "../validateTimestamp";
 
 export const HARVEST_BEEHIVE_ERRORS = {
   BEEHIVE_NOT_PLACED: "harvestBeeHive.notPlaced",
@@ -24,7 +25,7 @@ export type HarvestBeehiveAction = {
 type Options = {
   state: Readonly<GameState>;
   action: HarvestBeehiveAction;
-  createdAt?: number;
+  createdAt: number;
 };
 
 export const calculateSwarmBoost = (amount: number, game: GameState) => {
@@ -102,8 +103,10 @@ const getTotalHoneyProduced = (
 export function harvestBeehive({
   state,
   action,
-  createdAt = Date.now(),
+  createdAt,
 }: Options): GameState {
+  // Security: Validate timestamp to prevent time manipulation exploits
+  validateTimestamp(createdAt);
   return produce(state, (stateCopy) => {
     if (!stateCopy.bumpkin) {
       throw new Error("You do not have a Bumpkin!");

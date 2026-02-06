@@ -8,6 +8,7 @@ import {
 import { produce } from "immer";
 import { getCropYieldAmount } from "./harvest";
 import { updateBoostUsed } from "features/game/types/updateBoostUsed";
+import { validateTimestamp } from "../validateTimestamp";
 
 export type HarvestCropMachineAction = {
   type: "cropMachine.harvested";
@@ -17,7 +18,7 @@ export type HarvestCropMachineAction = {
 type Options = {
   state: Readonly<GameState>;
   action: HarvestCropMachineAction;
-  createdAt?: number;
+  createdAt: number;
   farmId: number;
 };
 
@@ -61,9 +62,11 @@ export function getPackYieldAmount({
 export function harvestCropMachine({
   state,
   action,
-  createdAt = Date.now(),
+  createdAt,
   farmId,
 }: Options): GameState {
+  // Security: Validate timestamp to prevent time manipulation exploits
+  validateTimestamp(createdAt);
   return produce(state, (stateCopy) => {
     const machine = stateCopy.buildings["Crop Machine"]?.[0];
     const { bumpkin } = stateCopy;

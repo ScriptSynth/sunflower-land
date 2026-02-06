@@ -1,5 +1,4 @@
 import { BoostName, GameState } from "features/game/types/game";
-
 import {
   GREENHOUSE_CROPS,
   GreenHouseCropName,
@@ -11,7 +10,6 @@ import {
   GreenHouseFruitSeedName,
 } from "features/game/types/fruits";
 import Decimal from "decimal.js-light";
-
 import { GREENHOUSE_CROP_TIME_SECONDS } from "./harvestGreenHouse";
 import {
   isTemporaryCollectibleActive,
@@ -26,6 +24,7 @@ import {
   FarmActivityName,
   trackFarmActivity,
 } from "features/game/types/farmActivity";
+import { validateTimestamp } from "../validateTimestamp";
 
 export type PlantGreenhouseAction = {
   type: "greenhouse.planted";
@@ -36,7 +35,7 @@ export type PlantGreenhouseAction = {
 type Options = {
   state: Readonly<GameState>;
   action: PlantGreenhouseAction;
-  createdAt?: number;
+  createdAt: number;
   farmId: number;
 };
 
@@ -207,9 +206,11 @@ function getGreenhouseSeedUsage({ game }: { game: GameState }): {
 export function plantGreenhouse({
   state,
   action,
-  createdAt = Date.now(),
+  createdAt,
   farmId,
 }: Options): GameState {
+  // Security: Validate timestamp to prevent time manipulation exploits
+  validateTimestamp(createdAt);
   return produce(state, (game) => {
     // Requires Greenhouse exists
     if (

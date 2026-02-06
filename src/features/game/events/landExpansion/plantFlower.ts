@@ -20,6 +20,7 @@ import { produce } from "immer";
 import { SEASONAL_SEEDS } from "features/game/types/seeds";
 import { getKeys } from "features/game/types/decorations";
 import { updateBoostUsed } from "features/game/types/updateBoostUsed";
+import { validateTimestamp } from "../validateTimestamp";
 
 export type PlantFlowerAction = {
   type: "flower.planted";
@@ -31,7 +32,7 @@ export type PlantFlowerAction = {
 type Options = {
   state: Readonly<GameState>;
   action: PlantFlowerAction;
-  createdAt?: number;
+  createdAt: number;
 };
 
 export const getFlowerTime = (
@@ -104,11 +105,9 @@ export function getPlantedAt({
   return createdAt - offset * 1000;
 }
 
-export function plantFlower({
-  state,
-  action,
-  createdAt = Date.now(),
-}: Options) {
+export function plantFlower({ state, action, createdAt }: Options) {
+  // Security: Validate timestamp to prevent time manipulation exploits
+  validateTimestamp(createdAt);
   return produce(state, (stateCopy) => {
     const { flowers, bumpkin } = stateCopy;
 

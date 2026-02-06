@@ -10,6 +10,7 @@ import {
   isTemporaryCollectibleActive,
 } from "features/game/lib/collectibleBuilt";
 import { updateBoostUsed } from "features/game/types/updateBoostUsed";
+import { validateTimestamp } from "../validateTimestamp";
 
 export type HarvestFlowerAction = {
   type: "flower.harvested";
@@ -19,7 +20,7 @@ export type HarvestFlowerAction = {
 type Options = {
   state: GameState;
   action: HarvestFlowerAction;
-  createdAt?: number;
+  createdAt: number;
 };
 
 function getFlowerAmount({
@@ -89,8 +90,10 @@ function getFlowerAmount({
 export function harvestFlower({
   state,
   action,
-  createdAt = Date.now(),
+  createdAt,
 }: Options): GameState {
+  // Security: Validate timestamp to prevent time manipulation exploits
+  validateTimestamp(createdAt);
   return produce(state, (stateCopy) => {
     stateCopy.beehives = updateBeehives({
       game: state,

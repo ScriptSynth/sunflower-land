@@ -9,7 +9,6 @@ import {
   GreenHouseFruitName,
 } from "features/game/types/fruits";
 import Decimal from "decimal.js-light";
-
 import { produce } from "immer";
 import { getFruitYield } from "./fruitHarvested";
 import { getCropYieldAmount } from "./harvest";
@@ -18,6 +17,7 @@ import {
   FarmActivityName,
   trackFarmActivity,
 } from "features/game/types/farmActivity";
+import { validateTimestamp } from "../validateTimestamp";
 
 export const GREENHOUSE_CROP_TIME_SECONDS: Record<
   GreenHouseCropName | GreenHouseFruitName,
@@ -72,16 +72,18 @@ export type HarvestGreenhouseAction = {
 type Options = {
   state: Readonly<GameState>;
   action: HarvestGreenhouseAction;
-  createdAt?: number;
+  createdAt: number;
   farmId: number;
 };
 
 export function harvestGreenHouse({
   state,
   action,
-  createdAt = Date.now(),
+  createdAt,
   farmId,
 }: Options): GameState {
+  // Security: Validate timestamp to prevent time manipulation exploits
+  validateTimestamp(createdAt);
   return produce(state, (game) => {
     // Requires Greenhouse exists
     if (!game.buildings.Greenhouse) {
