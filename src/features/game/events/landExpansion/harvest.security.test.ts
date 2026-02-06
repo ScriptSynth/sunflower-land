@@ -4,17 +4,18 @@ import { INITIAL_FARM } from "features/game/lib/constants";
 import { GameState } from "features/game/types/game";
 import { harvest } from "./harvest";
 
-const dateNow = Date.now();
+// Use a fixed timestamp for deterministic tests
+const FIXED_DATE = 1609459200000; // January 1, 2021 00:00:00 UTC
 const GAME_STATE: GameState = {
   ...INITIAL_FARM,
   crops: {
     "0": {
-      createdAt: dateNow,
+      createdAt: FIXED_DATE,
       x: 0,
       y: -2,
       crop: {
         name: "Sunflower",
-        plantedAt: dateNow - 2 * 60 * 1000, // Planted 2 minutes ago (ready to harvest)
+        plantedAt: FIXED_DATE - 2 * 60 * 1000, // Planted 2 minutes ago (ready to harvest)
       },
     },
   },
@@ -24,8 +25,18 @@ const GAME_STATE: GameState = {
 };
 
 describe("harvest security", () => {
+  beforeAll(() => {
+    // Mock Date.now() to use fixed timestamp for deterministic tests
+    jest.spyOn(Date, "now").mockReturnValue(FIXED_DATE);
+  });
+
+  afterAll(() => {
+    // Restore Date.now()
+    jest.restoreAllMocks();
+  });
+
   it("rejects timestamp from the future (time manipulation exploit)", () => {
-    const futureTime = dateNow + 2 * 60 * 60 * 1000; // 2 hours in the future
+    const futureTime = FIXED_DATE + 2 * 60 * 60 * 1000; // 2 hours in the future
 
     expect(() =>
       harvest({
@@ -40,7 +51,7 @@ describe("harvest security", () => {
   });
 
   it("accepts timestamp with reasonable clock skew", () => {
-    const slightlyFutureTime = dateNow + 30 * 1000; // 30 seconds in the future (within allowed skew)
+    const slightlyFutureTime = FIXED_DATE + 30 * 1000; // 30 seconds in the future (within allowed skew)
 
     expect(() =>
       harvest({
@@ -55,7 +66,7 @@ describe("harvest security", () => {
   });
 
   it("rejects extremely old timestamp", () => {
-    const veryOldTime = dateNow - 2 * 365 * 24 * 60 * 60 * 1000; // 2 years ago
+    const veryOldTime = FIXED_DATE - 2 * 365 * 24 * 60 * 60 * 1000; // 2 years ago
 
     expect(() =>
       harvest({
@@ -76,12 +87,12 @@ describe("harvest security", () => {
       ...INITIAL_FARM,
       crops: {
         "0": {
-          createdAt: dateNow,
+          createdAt: FIXED_DATE,
           x: 0,
           y: -2,
           crop: {
             name: "Sunflower",
-            plantedAt: dateNow - 10 * 60 * 1000, // Planted 10 minutes ago
+            plantedAt: FIXED_DATE - 10 * 60 * 1000, // Planted 10 minutes ago
           },
         },
       },
@@ -90,7 +101,7 @@ describe("harvest security", () => {
       bumpkin: TEST_BUMPKIN,
     };
 
-    const recentTime = dateNow - 5 * 60 * 1000; // 5 minutes ago
+    const recentTime = FIXED_DATE - 5 * 60 * 1000; // 5 minutes ago
 
     expect(() =>
       harvest({
@@ -110,12 +121,12 @@ describe("harvest security", () => {
       ...INITIAL_FARM,
       crops: {
         "0": {
-          createdAt: dateNow,
+          createdAt: FIXED_DATE,
           x: 0,
           y: -2,
           crop: {
             name: "Sunflower",
-            plantedAt: dateNow - 10 * 1000, // Just planted 10 seconds ago
+            plantedAt: FIXED_DATE - 10 * 1000, // Just planted 10 seconds ago
           },
         },
       },
@@ -125,7 +136,7 @@ describe("harvest security", () => {
     };
 
     // Try to exploit by passing a future timestamp
-    const futureTime = dateNow + 10 * 60 * 60 * 1000; // 10 hours in the future
+    const futureTime = FIXED_DATE + 10 * 60 * 60 * 1000; // 10 hours in the future
 
     expect(() =>
       harvest({
