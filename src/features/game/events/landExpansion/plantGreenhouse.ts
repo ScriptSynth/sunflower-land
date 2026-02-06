@@ -1,5 +1,4 @@
 import { BoostName, GameState } from "features/game/types/game";
-
 import {
   GREENHOUSE_CROPS,
   GreenHouseCropName,
@@ -11,7 +10,6 @@ import {
   GreenHouseFruitSeedName,
 } from "features/game/types/fruits";
 import Decimal from "decimal.js-light";
-
 import { GREENHOUSE_CROP_TIME_SECONDS } from "./harvestGreenHouse";
 import {
   isTemporaryCollectibleActive,
@@ -26,6 +24,7 @@ import {
   FarmActivityName,
   trackFarmActivity,
 } from "features/game/types/farmActivity";
+import { validateTimestamp } from "../validateTimestamp";
 
 export type PlantGreenhouseAction = {
   type: "greenhouse.planted";
@@ -211,18 +210,7 @@ export function plantGreenhouse({
   farmId,
 }: Options): GameState {
   // Security: Validate timestamp to prevent time manipulation exploits
-  const now = Date.now();
-  const maxClockSkew = 60 * 1000; // Allow 60 seconds of clock skew
-
-  if (createdAt > now + maxClockSkew) {
-    throw new Error("Invalid timestamp: createdAt is too far in the future");
-  }
-
-  // Prevent extremely old timestamps (more than 1 year in the past)
-  const oneYearAgo = now - 365 * 24 * 60 * 60 * 1000;
-  if (createdAt < oneYearAgo) {
-    throw new Error("Invalid timestamp: createdAt is too far in the past");
-  }
+  validateTimestamp(createdAt);
   return produce(state, (game) => {
     // Requires Greenhouse exists
     if (

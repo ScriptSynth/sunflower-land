@@ -59,6 +59,7 @@ import {
 import { isBuffActive } from "features/game/types/buffs";
 import { prngChance } from "lib/prng";
 import { KNOWN_IDS } from "features/game/types";
+import { validateTimestamp } from "../validateTimestamp";
 export type LandExpansionHarvestAction = {
   type: "crop.harvested";
   index: string;
@@ -1021,18 +1022,8 @@ export function harvest({
   farmId = 0,
 }: Options): GameState {
   // Security: Validate timestamp to prevent time manipulation exploits
-  const now = Date.now();
-  const maxClockSkew = 60 * 1000; // Allow 60 seconds of clock skew
+  validateTimestamp(createdAt);
 
-  if (createdAt > now + maxClockSkew) {
-    throw new Error("Invalid timestamp: createdAt is too far in the future");
-  }
-
-  // Prevent extremely old timestamps (more than 1 year in the past)
-  const oneYearAgo = now - 365 * 24 * 60 * 60 * 1000;
-  if (createdAt < oneYearAgo) {
-    throw new Error("Invalid timestamp: createdAt is too far in the past");
-  }
   return produce(state, (stateCopy) => {
     const { crops: plots } = stateCopy;
 

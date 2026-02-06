@@ -20,6 +20,7 @@ import { produce } from "immer";
 import { SEASONAL_SEEDS } from "features/game/types/seeds";
 import { getKeys } from "features/game/types/decorations";
 import { updateBoostUsed } from "features/game/types/updateBoostUsed";
+import { validateTimestamp } from "../validateTimestamp";
 
 export type PlantFlowerAction = {
   type: "flower.planted";
@@ -106,18 +107,7 @@ export function getPlantedAt({
 
 export function plantFlower({ state, action, createdAt }: Options) {
   // Security: Validate timestamp to prevent time manipulation exploits
-  const now = Date.now();
-  const maxClockSkew = 60 * 1000; // Allow 60 seconds of clock skew
-
-  if (createdAt > now + maxClockSkew) {
-    throw new Error("Invalid timestamp: createdAt is too far in the future");
-  }
-
-  // Prevent extremely old timestamps (more than 1 year in the past)
-  const oneYearAgo = now - 365 * 24 * 60 * 60 * 1000;
-  if (createdAt < oneYearAgo) {
-    throw new Error("Invalid timestamp: createdAt is too far in the past");
-  }
+  validateTimestamp(createdAt);
   return produce(state, (stateCopy) => {
     const { flowers, bumpkin } = stateCopy;
 

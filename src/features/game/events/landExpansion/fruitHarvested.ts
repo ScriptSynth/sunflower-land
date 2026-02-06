@@ -38,6 +38,7 @@ import { getFruitfulBlendBuff } from "./fertiliseFruitPatch";
 import { updateBoostUsed } from "features/game/types/updateBoostUsed";
 import { prngChance } from "lib/prng";
 import { KNOWN_IDS } from "features/game/types";
+import { validateTimestamp } from "../validateTimestamp";
 
 export type HarvestFruitAction = {
   type: "fruit.harvested";
@@ -317,18 +318,7 @@ export function harvestFruit({
   farmId,
 }: Options): GameState {
   // Security: Validate timestamp to prevent time manipulation exploits
-  const now = Date.now();
-  const maxClockSkew = 60 * 1000; // Allow 60 seconds of clock skew
-
-  if (createdAt > now + maxClockSkew) {
-    throw new Error("Invalid timestamp: createdAt is too far in the future");
-  }
-
-  // Prevent extremely old timestamps (more than 1 year in the past)
-  const oneYearAgo = now - 365 * 24 * 60 * 60 * 1000;
-  if (createdAt < oneYearAgo) {
-    throw new Error("Invalid timestamp: createdAt is too far in the past");
-  }
+  validateTimestamp(createdAt);
   return produce(state, (stateCopy) => {
     const { fruitPatches, bumpkin } = stateCopy;
 
