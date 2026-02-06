@@ -24,7 +24,7 @@ export type HarvestBeehiveAction = {
 type Options = {
   state: Readonly<GameState>;
   action: HarvestBeehiveAction;
-  createdAt?: number;
+  createdAt: number;
 };
 
 export const calculateSwarmBoost = (amount: number, game: GameState) => {
@@ -102,8 +102,21 @@ const getTotalHoneyProduced = (
 export function harvestBeehive({
   state,
   action,
-  createdAt = Date.now(),
+  createdAt,
 }: Options): GameState {
+  // Security: Validate timestamp to prevent time manipulation exploits
+  const now = Date.now();
+  const maxClockSkew = 60 * 1000; // Allow 60 seconds of clock skew
+
+  if (createdAt > now + maxClockSkew) {
+    throw new Error("Invalid timestamp: createdAt is too far in the future");
+  }
+
+  // Prevent extremely old timestamps (more than 1 year in the past)
+  const oneYearAgo = now - 365 * 24 * 60 * 60 * 1000;
+  if (createdAt < oneYearAgo) {
+    throw new Error("Invalid timestamp: createdAt is too far in the past");
+  }
   return produce(state, (stateCopy) => {
     if (!stateCopy.bumpkin) {
       throw new Error("You do not have a Bumpkin!");

@@ -47,7 +47,7 @@ export type HarvestFruitAction = {
 type Options = {
   state: Readonly<GameState>;
   action: HarvestFruitAction;
-  createdAt?: number;
+  createdAt: number;
   farmId: number;
 };
 
@@ -313,9 +313,22 @@ export function getFruitYield({
 export function harvestFruit({
   state,
   action,
-  createdAt = Date.now(),
+  createdAt,
   farmId,
 }: Options): GameState {
+  // Security: Validate timestamp to prevent time manipulation exploits
+  const now = Date.now();
+  const maxClockSkew = 60 * 1000; // Allow 60 seconds of clock skew
+
+  if (createdAt > now + maxClockSkew) {
+    throw new Error("Invalid timestamp: createdAt is too far in the future");
+  }
+
+  // Prevent extremely old timestamps (more than 1 year in the past)
+  const oneYearAgo = now - 365 * 24 * 60 * 60 * 1000;
+  if (createdAt < oneYearAgo) {
+    throw new Error("Invalid timestamp: createdAt is too far in the past");
+  }
   return produce(state, (stateCopy) => {
     const { fruitPatches, bumpkin } = stateCopy;
 
