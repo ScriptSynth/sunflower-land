@@ -342,12 +342,38 @@ export function harvestFruit({
     const { seed } = PATCH_FRUIT[name];
     const { plantSeconds } = PATCH_FRUIT_SEEDS[seed];
 
-    if (createdAt - plantedAt < plantSeconds * 1000) {
-      throw new Error("Not ready");
+    // Security check: Validate timestamps are not in the future
+    const realTime = Date.now();
+    const MAX_FUTURE_TOLERANCE = 60 * 1000; // 1 minute tolerance for network latency
+
+    if (createdAt > realTime + MAX_FUTURE_TOLERANCE) {
+      throw new Error(
+        `Invalid harvest time: timestamp too far in future (${createdAt} vs ${realTime})`,
+      );
     }
 
-    if (createdAt - harvestedAt < plantSeconds * 1000) {
-      throw new Error("Fruit is still replenishing");
+    if (plantedAt > createdAt) {
+      throw new Error("Invalid planted time: fruit planted in the future");
+    }
+
+    // Check if fruit is ready for first harvest
+    const timeSincePlanted = createdAt - plantedAt;
+    const requiredTime = plantSeconds * 1000;
+
+    if (timeSincePlanted < requiredTime) {
+      throw new Error(
+        `Not ready. Required: ${requiredTime}ms, Elapsed: ${timeSincePlanted}ms`,
+      );
+    }
+
+    // Check if fruit is ready for subsequent harvest (replenishing)
+    if (harvestedAt > 0) {
+      const timeSinceHarvest = createdAt - harvestedAt;
+      if (timeSinceHarvest < requiredTime) {
+        throw new Error(
+          `Fruit is still replenishing. Required: ${requiredTime}ms, Elapsed: ${timeSinceHarvest}ms`,
+        );
+      }
     }
 
     if (!harvestsLeft) {

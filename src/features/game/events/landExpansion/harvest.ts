@@ -112,12 +112,15 @@ export const isReadyToHarvest = (
   return createdAt - plantedCrop.plantedAt >= cropDetails.harvestSeconds * 1000;
 };
 
-export function isCropGrowing(plot: CropPlot) {
+export function isCropGrowing(plot: CropPlot, currentTime?: number) {
   const crop = plot.crop;
   if (!crop) return false;
 
   const cropDetails = CROPS[crop.name];
-  return !isReadyToHarvest(Date.now(), crop, cropDetails);
+  // Use provided time or Date.now() as fallback for backward compatibility
+  // In production, this should always use server-synchronized time
+  const time = currentTime ?? Date.now();
+  return !isReadyToHarvest(time, crop, cropDetails);
 }
 
 /**
@@ -965,8 +968,29 @@ export function harvestCropFromPlot({
 
   const { harvestSeconds } = CROPS[cropName];
 
-  if (createdAt - plantedAt < harvestSeconds * 1000) {
-    throw new Error("Not ready");
+  // Validate harvest time
+  const elapsedTime = createdAt - plantedAt;
+  const requiredTime = harvestSeconds * 1000;
+
+  if (elapsedTime < requiredTime) {
+    throw new Error(
+      `Not ready. Required: ${requiredTime}ms, Elapsed: ${elapsedTime}ms`,
+    );
+  }
+
+  // Additional security check: Ensure plantedAt is not in the future
+  if (plantedAt > createdAt) {
+    throw new Error("Invalid planted time: crop planted in the future");
+  }
+
+  // Security check: Ensure createdAt is not too far in the future
+  // Allow some tolerance for network latency (1 minute)
+  const MAX_FUTURE_TOLERANCE = 60 * 1000;
+  const realTime = Date.now();
+  if (createdAt > realTime + MAX_FUTURE_TOLERANCE) {
+    throw new Error(
+      `Invalid harvest time: timestamp too far in future (${createdAt} vs ${realTime})`,
+    );
   }
 
   const { reward, boostUsed: rewardBoostsUsed } = plot.crop.reward
