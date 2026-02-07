@@ -50,7 +50,7 @@ describe("Time Manipulation Security", () => {
           createdAt: futureTime,
           farmId: 1,
         }),
-      ).toThrow("Invalid harvest time: timestamp too far in future");
+      ).toThrow("Invalid harvest time");
     });
 
     it("should prevent harvesting crops planted in the future", () => {
@@ -199,7 +199,7 @@ describe("Time Manipulation Security", () => {
           createdAt: futureTime,
           farmId: 1,
         }),
-      ).toThrow("Invalid harvest time: timestamp too far in future");
+      ).toThrow("Invalid harvest time");
     });
 
     it("should prevent harvesting fruits planted in the future", () => {
@@ -423,7 +423,7 @@ describe("Time Manipulation Security", () => {
           createdAt: harvestTime,
           farmId: 1,
         }),
-      ).toThrow("Invalid harvest time: timestamp too far in future");
+      ).toThrow("Invalid harvest time");
     });
   });
 });

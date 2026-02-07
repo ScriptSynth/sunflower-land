@@ -347,9 +347,8 @@ export function harvestFruit({
     const MAX_FUTURE_TOLERANCE = 60 * 1000; // 1 minute tolerance for network latency
 
     if (createdAt > realTime + MAX_FUTURE_TOLERANCE) {
-      throw new Error(
-        `Invalid harvest time: timestamp too far in future (${createdAt} vs ${realTime})`,
-      );
+      // Don't expose timing details to potential attackers
+      throw new Error("Invalid harvest time");
     }
 
     if (plantedAt > createdAt) {

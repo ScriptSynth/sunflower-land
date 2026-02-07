@@ -14,12 +14,14 @@ interface TimeSync {
   offset: number;
   lastSync: number;
   syncInterval: number;
+  intervalId?: NodeJS.Timeout; // Store interval ID for cleanup
 }
 
 const TIME_SYNC_STATE: TimeSync = {
   offset: 0,
   lastSync: 0,
   syncInterval: 5 * 60 * 1000, // Re-sync every 5 minutes
+  intervalId: undefined,
 };
 
 /**
@@ -189,7 +191,7 @@ export async function forceTimeSync(apiUrl: string): Promise<void> {
 
 // Export the state for testing purposes
 export const __TEST_ONLY__ = {
-  getState: () => TIME_SYNC_STATE,
+  getState: () => Object.freeze({ ...TIME_SYNC_STATE }), // Return frozen copy to prevent mutations
   setState: (state: Partial<TimeSync>) => {
     Object.assign(TIME_SYNC_STATE, state);
   },
