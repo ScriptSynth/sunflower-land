@@ -979,15 +979,15 @@ export function startGame(authContext: AuthContext) {
             },
             onDone: [
               {
-                target: "loadLandToVisit",
-                cond: () => window.location.href.includes("visit"),
-                actions: ["assignGame"],
-              },
-              {
                 target: "blacklisted",
                 cond: (_, event) => {
                   return event.data.state.ban.status === "permanent";
                 },
+              },
+              {
+                target: "loadLandToVisit",
+                cond: () => window.location.href.includes("visit"),
+                actions: ["assignGame"],
               },
               {
                 target: "portalling",
@@ -1121,18 +1121,26 @@ export function startGame(authContext: AuthContext) {
             VISIT: {
               target: "loadLandToVisit",
             },
-            END_VISIT: {
-              target: "playing",
-              actions: assign((context) => ({
-                visitorId: undefined,
-                visitorState: undefined,
-                hasHelpedPlayerToday: undefined,
-                totalHelpedToday: undefined,
-                state: context.visitorState,
-                farmId: context.visitorId,
-                actions: [],
-              })),
-            },
+            END_VISIT: [
+              {
+                target: "blacklisted",
+                cond: (context) => {
+                  return context.visitorState?.ban?.status === "permanent";
+                },
+              },
+              {
+                target: "playing",
+                actions: assign((context) => ({
+                  visitorId: undefined,
+                  visitorState: undefined,
+                  hasHelpedPlayerToday: undefined,
+                  totalHelpedToday: undefined,
+                  state: context.visitorState,
+                  farmId: context.visitorId,
+                  actions: [],
+                })),
+              },
+            ],
           },
         },
         notifying: {
@@ -1610,6 +1618,16 @@ export function startGame(authContext: AuthContext) {
         },
         playing: {
           id: "playing",
+          always: [
+            {
+              target: "blacklisted",
+              cond: (context) => context.state.ban?.status === "permanent",
+            },
+            {
+              target: "investigating",
+              cond: (context) => context.state.ban?.status === "investigating",
+            },
+          ],
           entry: "clearTransactionId",
           invoke: {
             /**
@@ -2341,7 +2359,15 @@ export function startGame(authContext: AuthContext) {
         error: {
           id: "error",
           on: {
-            CONTINUE: "playing",
+            CONTINUE: [
+              {
+                target: "blacklisted",
+                cond: (context) => context.state.ban?.status === "permanent",
+              },
+              {
+                target: "playing",
+              },
+            ],
             REFRESH: {
               target: "loading",
             },
