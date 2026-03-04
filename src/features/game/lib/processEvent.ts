@@ -739,6 +739,10 @@ export function processEvent({
   visitorState,
   createdAt,
 }: ProcessEventArgs): GameState | [GameState, GameState] {
+  if (state.ban?.status === "permanent") {
+    throw new Error("Account is permanently banned");
+  }
+
   const handler = EVENTS[action.type];
 
   if (!handler) {
