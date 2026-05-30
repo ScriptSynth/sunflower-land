@@ -35,7 +35,7 @@ export function burnClutter({ state, action }: Options) {
     }
 
     if (amount % CLUTTER[item].sellUnit !== 0) {
-      throw new Error("Invalid amount");
+      throw new Error("Amount must be a multiple of the sell unit");
     }
 
     if (game.inventory[item]?.lessThan(amount)) {
