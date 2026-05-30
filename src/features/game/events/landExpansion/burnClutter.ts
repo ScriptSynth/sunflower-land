@@ -31,7 +31,7 @@ export function burnClutter({ state, action }: Options) {
     }
 
     if (amount <= 0) {
-      throw new Error("Amount must be positive");
+      throw new Error("Amount must be greater than zero");
     }
 
     if (amount % CLUTTER[item].sellUnit !== 0) {
