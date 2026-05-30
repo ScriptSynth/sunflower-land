@@ -64,6 +64,9 @@ export function sellTreasure({ state, action }: Options) {
     if (!new Decimal(amount).isInteger()) {
       throw new Error("Invalid amount");
     }
+    if (amount <= 0) {
+      throw new Error("Invalid amount");
+    }
 
     const { count } = getCountAndType(game, item);
 

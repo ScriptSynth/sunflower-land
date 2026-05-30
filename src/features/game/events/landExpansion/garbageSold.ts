@@ -81,6 +81,9 @@ export function sellGarbage({ state, action }: Options) {
     if (!new Decimal(amount).isInteger()) {
       throw new Error("Invalid amount");
     }
+    if (amount <= 0) {
+      throw new Error("Invalid amount");
+    }
     const isCollectibleItem = isCollectible(item);
 
     const count = getItemCount(item, game);
