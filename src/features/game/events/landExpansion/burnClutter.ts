@@ -26,11 +26,15 @@ export function burnClutter({ state, action }: Options) {
       throw new Error("Item not in inventory");
     }
 
-    if (
-      !new Decimal(amount).isInteger() ||
-      amount <= 0 ||
-      amount % CLUTTER[item].sellUnit !== 0
-    ) {
+    if (!new Decimal(amount).isInteger()) {
+      throw new Error("Invalid amount");
+    }
+
+    if (amount <= 0) {
+      throw new Error("Amount must be positive");
+    }
+
+    if (amount % CLUTTER[item].sellUnit !== 0) {
       throw new Error("Invalid amount");
     }
 

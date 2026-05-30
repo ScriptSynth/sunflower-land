@@ -65,7 +65,7 @@ export function sellTreasure({ state, action }: Options) {
       throw new Error("Invalid amount");
     }
     if (amount <= 0) {
-      throw new Error("Invalid amount");
+      throw new Error("Amount must be positive");
     }
 
     const { count } = getCountAndType(game, item);

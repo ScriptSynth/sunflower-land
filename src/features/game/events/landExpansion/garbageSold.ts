@@ -82,7 +82,7 @@ export function sellGarbage({ state, action }: Options) {
       throw new Error("Invalid amount");
     }
     if (amount <= 0) {
-      throw new Error("Invalid amount");
+      throw new Error("Amount must be positive");
     }
     const isCollectibleItem = isCollectible(item);
 
